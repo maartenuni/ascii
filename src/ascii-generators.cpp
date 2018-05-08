@@ -37,7 +37,10 @@ int generate_default(
                 INPUT,
                 CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED
                 );
-        cv::namedWindow(OUTPUT, CV_WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
+        cv::namedWindow(
+                OUTPUT,
+                CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED
+                );
     }
 
     CharacterStats cstats(CHARS, "DejaVu Sans Mono", 12);
@@ -70,8 +73,21 @@ int generate_default(
         }
     }
 
+    if (option_context_have_option(options, "sobel") ) {
+        int ks; // kernel size
+        option_context_int_value(options, "sobel", &ks);
+        cv::Sobel(reduced, reduced, reduced.depth(), 1, 1, ks);
+    }
+
+    if (option_context_have_option(options, "canny")) {
+        int ks;
+        option_context_int_value(options, "canny", &ks);
+        cv::Canny(reduced, reduced, 50, 100, ks); 
+    }
+
     cv::Size aoi_size(reduced.cols / cols, reduced.rows / rows);
     unsigned wsteps, hsteps;
+    double highest = 0;
     for (double r = 0; r < rows; r++) {
         for (double c = 0; c < cols; c++) {
             cv::Point p(c * float(reduced.cols) / cols,
@@ -79,16 +95,23 @@ int generate_default(
             cv::Rect roi(p, aoi_size);
             cv::Mat tile(reduced, roi);
             cv::Scalar m = cv::mean(tile);
-            int index = m[0] / 256.0  * CHARS.size();
+            highest = std::max(m[0], highest);
+        }
+    }
+    for (double r = 0; r < rows; r++) {
+        for (double c = 0; c < cols; c++) {
+            cv::Point p(c * float(reduced.cols) / cols,
+                        r * float(reduced.rows) / rows);
+            cv::Rect roi(p, aoi_size);
+            cv::Mat tile(reduced, roi);
+            cv::Scalar m = cv::mean(tile);
+            int index = (m[0] / highest) * (char_set.size() - 1);
             assert(index < char_set.size());
             cout << char_set[index];
         }
         cout << endl;
     }
 
-//    cv::Sobel(reduced, reduced, reduced.depth(), 1, 1, 7, 1);
-//
-//    cv::erode(reduced, reduced, 
     if (display) {
         imshow(INPUT, input);
         imshow(OUTPUT, reduced);

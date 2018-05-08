@@ -22,6 +22,8 @@ cmd_option predef_options[] = {
     { 0 , "smooth-method",  OPT_STR,    {}},
     {'r', "reverse",        OPT_FLAG,   {}},
     {'l', "list-fonts",     OPT_FLAG,   {}},
+    { 0 , "sobel",          OPT_INT,    {}},
+    {'c', "canny",          OPT_INT,    {}},
     {'f', "font",           OPT_STR,    {}},
     { 0 , "font-file",      OPT_STR,    {}},
 };
