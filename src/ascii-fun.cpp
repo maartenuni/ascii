@@ -1,5 +1,5 @@
 
-#include <parse_cmd_0/parse_cmd.h>
+#include <parse_cmd_0_0/parse_cmd.h>
 #include <cstdio>
 #include <cstdlib>
 #include <ncurses.h>
@@ -15,15 +15,20 @@ using std::string;
 using std::shared_ptr;
 using std::make_shared;
 
+
+const char* g_help = "In order to run ascii-fun, specify an image as "
+                     "argument. ascii-fun will turn it in a nice ascii-art"
+                     "image";
+
 cmd_option predef_options[] = {
-    {'h', "help",           OPT_FLAG,   {}},
-    {'d', "display",        OPT_FLAG,   {}},
-    {'s', "smooth",         OPT_INT,    {}},
-    { 0 , "smooth-method",  OPT_STR,    {}},
-    {'r', "reverse",        OPT_FLAG,   {}},
-    {'l', "list-fonts",     OPT_FLAG,   {}},
-    {'f', "font",           OPT_STR,    {}},
-    { 0 , "font-file",      OPT_STR,    {}},
+    {'h', "help",           OPT_FLAG,   {}, "Display help"},
+    {'d', "display",        OPT_FLAG,   {}, "Display processing steps"},
+    {'s', "smooth",         OPT_INT,    {}, "Apply smooting kernel size must be odd."},
+    { 0 , "smooth-method",  OPT_STR,    {}, "How would you like to smooth gaussian/median"},
+    {'r', "reverse",        OPT_FLAG,   {}, "Make dark regions appear light"},
+    {'l', "list-fonts",     OPT_FLAG,   {}, "List available fonts and exit"},
+    {'f', "font",           OPT_STR,    {}, "Choose font."},
+    { 0 , "font-file",      OPT_STR,    {}, "Choose a font file."},
 };
 
 int parse_options(int argc, char** argv, option_context** out, int* stop)
@@ -38,12 +43,22 @@ int parse_options(int argc, char** argv, option_context** out, int* stop)
             sizeof(predef_options)/sizeof(predef_options[0])
             );
 
+    option_context_set_description(context, g_help);
+
     *out = context;
 
     if (ret != OPTION_OK) {
         option_context_free(context);
         *out = NULL;
         return ret;
+    }
+
+    if (option_context_have_option(context, "help")) {
+        char* help = nullptr;
+        option_context_help(context, &help);
+        fprintf(stdout, "%s\n", help);
+        free (help);
+        return 0;
     }
 
     if (option_context_have_option(context, "list-fonts")) {
